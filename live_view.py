@@ -48,7 +48,7 @@ def run(checkpoint_path: str, deterministic: bool, episodes: int) -> None:
     
     try:
         while episodes < 0 or ep < episodes:
-            # Refresh network weights if trainer overwrote target file
+            # refresh network weights if trainer overwrote target file
             try:
                 mtime = os.path.getmtime(checkpoint_path)
             except FileNotFoundError:
@@ -64,7 +64,7 @@ def run(checkpoint_path: str, deterministic: bool, episodes: int) -> None:
                         last_global_step = ckpt.get("global_step", 0)
                         print(f"[live_view] reloaded checkpoint (global_step={last_global_step})")
                 except (RuntimeError, EOFError, OSError):
-                    # Ignore partial reads from concurrent file writes
+                    # ignore partial reads from concurrent file writes
                     pass
 
             raw_obs, _ = env.reset()
@@ -87,7 +87,7 @@ def run(checkpoint_path: str, deterministic: bool, episodes: int) -> None:
                 steps += 1
                 done = terminated or truncated
                 
-                # Pace rendering to real time
+                # pace rendering to real time
                 time.sleep(1 / 60)
 
             ep += 1

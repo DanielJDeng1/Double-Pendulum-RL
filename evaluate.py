@@ -70,7 +70,7 @@ def evaluate(
                 total_reward += reward
                 steps += 1
                 
-                # Truncate manually if max_steps cap reached
+                # truncate manually if max_steps cap reached
                 done = terminated or truncated or (steps >= max_steps)
 
                 if render:

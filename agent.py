@@ -49,7 +49,7 @@ class ActorCritic(nn.Module):
             layer_init(nn.Linear(hidden_size, act_dim), std=0.01),
         )
 
-        # Learnable state-independent log std initialized to 0.0 for initial std=1.0 exploration
+        # learnable state independent log std initialized to 0.0 for initial std=1.0 exploration
         self.actor_log_std = nn.Parameter(torch.zeros(1, act_dim))
 
     def get_value(self, obs: torch.Tensor) -> torch.Tensor:

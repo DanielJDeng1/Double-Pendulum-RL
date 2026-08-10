@@ -1,93 +1,70 @@
-# Double Pendulum RL — PPO on InvertedDoublePendulum-v5
+# Double Pendulum RL
 
-A PyTorch PPO agent for the MuJoCo `InvertedDoublePendulum-v5` Gymnasium
-environment, set up for Windows 11 + an NVIDIA RTX 5060 Laptop GPU
-(Blackwell, `sm_120`).
+A small reinforcement learning project using PyTorch PPO to train an agent on MuJoCo's `InvertedDoublePendulum-v5`.
 
-## 1. Setup (Windows PowerShell)
+The main goal was to get PPO working from scratch and see how well it could learn to keep the double pendulum balanced. The project also includes a simple Tkinter dashboard for starting training runs and looking at saved checkpoints without having to manage everything from the command line.
 
-```powershell
-cd double_pendulum_rl
-py -3.11 -m venv venv
+## Setup
+
+Clone the repository and create a virtual environment:
+
+```bash
+git clone https://github.com/DanielJDeng1/Double-Pendulum-RL.git
+cd Double-Pendulum-RL
+
+python -m venv venv
 .\venv\Scripts\Activate.ps1
 
-# CUDA 12.8 nightly wheel FIRST — see requirements.txt for why this matters
-pip install --pre torch torchvision torchaudio `
-    --index-url https://download.pytorch.org/whl/nightly/cu128
-
 pip install -r requirements.txt
-
-# sanity check
-python -c "import torch; print(torch.__version__, torch.cuda.is_available(), torch.cuda.get_device_name(0))"
 ```
 
-If `torch.cuda.is_available()` is `True` but training still falls back to
-CPU with a "no kernel image is available" error, your wheel predates
-`sm_120` kernel support — reinstall from the nightly index above.
+## Running the Project
 
-## 2. Render smoke-test
+### GUI
 
-Before training, confirm MuJoCo can open a window on your system:
+If you want to use the dashboard:
 
-```powershell
-python view_sim.py
+```bash
+python gui_launcher.py
 ```
 
-This drives the pendulum with random actions so you can confirm the
-viewer renders. No trained model needed.
+The GUI can be used to start training runs and work with saved models.
 
-## 3. Train
+### Training from the command line
 
-```powershell
-python train.py --total-steps 1000000 --num-envs 8
+example:
+
+```bash
+python train.py --run-name ppo_double_pendulum --total-steps 1000000 --num-envs 8
 ```
 
-Runs headless (no rendering) for speed. Checkpoints save to
-`models/ppo_double_pendulum.pth` every 10 updates. Watch progress with:
+this starts a PPO run using 8 environments in parallel.
 
-```powershell
-tensorboard --logdir runs
+### Watching a checkpoint
+
+once a model has been trained, load it into the viewer:
+
+```bash
+python live_view.py --checkpoint models/ppo_double_pendulum.pth
 ```
 
-Key flags: `--total-steps`, `--num-envs`, `--num-steps`, `--learning-rate`,
-`--seed`, `--run-name`. See `train.py`'s `PPOConfig` dataclass for every
-hyperparameter (GAE lambda, clip epsilon, entropy/value coefficients, etc.).
+### Evaluating models
 
-## 4. Watch the trained policy
+To run several evaluation episodes:
 
-```powershell
-python view_sim.py --checkpoint models\ppo_double_pendulum.pth
+```bash
+python evaluate.py --checkpoint models/ppo_double_pendulum.pth --episodes 20 --render
 ```
 
-## 5. Evaluate
+## Project Structure
 
-```powershell
-python evaluate.py --checkpoint models\ppo_double_pendulum.pth --episodes 50 --csv-out results\eval.csv
+```text
+Double-Pendulum-RL/
+├── agent.py          # agent network
+├── env_utils.py      # environment setup and wrappers
+├── train.py          # PPO training loop
+├── evaluate.py       # batch evaluation
+├── live_view.py      # checkpoint viewer
+├── gui_launcher.py   # Tkinter training dashboard
+└── view_sim.py       # MuJoCo simulation viewer
 ```
-
-Add `--render` to watch while it evaluates, or `--stochastic` to sample
-from the policy distribution instead of using its mean action.
-
-## Files
-
-| File | Purpose |
-|---|---|
-| `agent.py` | `ActorCritic` network: Gaussian policy head + separate value head |
-| `train.py` | Headless PPO training loop (GAE, clipped surrogate loss, TensorBoard) |
-| `view_sim.py` | Interactive MuJoCo viewer — random policy or a loaded checkpoint |
-| `evaluate.py` | Batch evaluation with return/length statistics and optional CSV export |
-| `requirements.txt` | Dependencies, with the Blackwell/CUDA 12.8 nightly install note |
-
-## Algorithm notes
-
-- **Policy**: diagonal Gaussian, state-dependent mean, state-independent
-  learned log-std (standard PPO continuous-control setup).
-- **Advantage estimation**: Generalized Advantage Estimation (GAE-λ).
-- **Objective**: PPO clipped surrogate loss + value loss + entropy bonus.
-- **Vectorization**: `gymnasium.vector.SyncVectorEnv` across `--num-envs`
-  parallel environment copies for faster rollout collection on CPU while
-  the network forward/backward passes run on GPU.
-
-This is a from-scratch reference implementation (not `stable-baselines3`)
-so every piece — rollout buffer, GAE, PPO-clip, checkpointing — is visible
-and editable in `train.py`.

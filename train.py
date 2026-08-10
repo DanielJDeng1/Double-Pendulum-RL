@@ -93,7 +93,7 @@ def make_env(env_id: str, seed: int):
 def get_device() -> torch.device:
     if torch.cuda.is_available():
         try:
-            # Catch missing architecture kernels on new GPU arches early
+            # catch missing architecture kernels on new GPU arches early
             _ = torch.zeros(1, device="cuda") + 1
             return torch.device("cuda")
         except RuntimeError as e:
@@ -166,7 +166,7 @@ def main(cfg: PPOConfig):
     minibatch_size = batch_size // cfg.num_minibatches
     num_updates = cfg.total_steps // batch_size
 
-    # Rollout buffers
+    # rollout buffers
     obs_buf = torch.zeros((cfg.num_steps, cfg.num_envs, obs_dim), device=device)
     actions_buf = torch.zeros((cfg.num_steps, cfg.num_envs, act_dim), device=device)
     logprobs_buf = torch.zeros((cfg.num_steps, cfg.num_envs), device=device)
@@ -184,7 +184,7 @@ def main(cfg: PPOConfig):
     recent_returns: deque = deque(maxlen=50)
     recent_lengths: deque = deque(maxlen=50)
 
-    # Handle process termination cleanly without dropping state or leaving state flags hanging
+    # handle process termination cleanly without dropping state or leaving state flags hanging
     stop_requested = {"flag": False}
 
     def _handle_stop(signum, frame):
@@ -207,7 +207,7 @@ def main(cfg: PPOConfig):
             frac = 1.0 - (update - 1.0) / num_updates
             optimizer.param_groups[0]["lr"] = frac * cfg.learning_rate
 
-        # Rollout collection
+        # rollout collection
         for step in range(cfg.num_steps):
             global_step += cfg.num_envs
             obs_buf[step] = next_obs
@@ -268,7 +268,7 @@ def main(cfg: PPOConfig):
         b_returns = returns.reshape(-1)
         b_values = values_buf.reshape(-1)
 
-        # Policy and value function update
+        # policy and value function update
         b_inds = np.arange(batch_size)
         clipfracs = []
         for epoch in range(cfg.update_epochs):
@@ -310,7 +310,7 @@ def main(cfg: PPOConfig):
                 nn.utils.clip_grad_norm_(agent.parameters(), cfg.max_grad_norm)
                 optimizer.step()
 
-        # Telemetry and checkpoint export
+        # telemetry and checkpoint export
         sps = int(global_step / (time.time() - start_time))
         writer.add_scalar("charts/learning_rate", optimizer.param_groups[0]["lr"], global_step)
         writer.add_scalar("losses/value_loss", v_loss.item(), global_step)
