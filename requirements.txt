@@ -1,0 +1,27 @@
+# ---------------------------------------------------------------------------
+# double_pendulum_rl — requirements
+#
+# IMPORTANT — RTX 5060 (Blackwell, sm_120) note:
+#   Do NOT `pip install torch` from this file as-is for CUDA support.
+#   PyTorch's stable release channel lagged behind Blackwell (sm_120) kernel
+#   support for a while after launch. Install the CUDA 12.8 nightly build
+#   FIRST, in its own step, then install the rest of this file:
+#
+#     pip install --pre torch torchvision torchaudio ^
+#         --index-url https://download.pytorch.org/whl/nightly/cu128
+#
+#   Then:
+#     pip install -r requirements.txt
+#
+#   Verify afterwards with:
+#     python -c "import torch; print(torch.__version__, torch.cuda.is_available(), torch.cuda.get_device_name(0))"
+#
+#   As of this writing, check https://pytorch.org/get-started/locally/ for the
+#   current recommended index — sm_120 support has been moving from nightly
+#   into stable releases over time, so a newer stable wheel may now suffice.
+# ---------------------------------------------------------------------------
+
+gymnasium[mujoco]>=1.0.0
+mujoco>=3.1.0
+tensorboard>=2.16.0
+numpy>=1.26.0
